@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relay chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F1F4F6;
+  --panel: #FFFFFF;
+  --side: #E4EAEE;
+  --ink: #15212B;
+  --muted: #5B6875;
+  --line: #D6DEE4;
+  --accent: #0B7A80;
+  --accent-ink: #FFFFFF;
+  --hover: rgba(21, 33, 43, 0.06);
+  --live: #2E9E5B;
+  --warn: #C98A12;
+  --danger: #B4321F;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E151B;
+    --panel: #131C23;
+    --side: #0A1015;
+    --ink: #E6EDF2;
+    --muted: #8A99A6;
+    --line: #243039;
+    --accent: #4FC3C9;
+    --accent-ink: #06282B;
+    --hover: rgba(230, 237, 242, 0.07);
+    --live: #4CC383;
+    --warn: #E0A93B;
+    --danger: #F08A78;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E151B;
+  --panel: #131C23;
+  --side: #0A1015;
+  --ink: #E6EDF2;
+  --muted: #8A99A6;
+  --line: #243039;
+  --accent: #4FC3C9;
+  --accent-ink: #06282B;
+  --hover: rgba(230, 237, 242, 0.07);
+  --live: #4CC383;
+  --warn: #E0A93B;
+  --danger: #F08A78;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---------- sidebar ---------- */
+.side {
+  background: var(--side);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.brand {
+  font-family: var(--serif);
+  font-size: 30px;
+  line-height: 1;
+  padding: 20px 20px 14px;
+  letter-spacing: -0.01em;
+}
+.side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px 4px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.chans {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+.chan:hover { background: var(--hover); color: var(--ink); }
+.chan .hash { opacity: 0.55; }
+.chan .cname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chan.unread { color: var(--ink); font-weight: 600; }
+.chan.active {
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.chan .dot {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+.newch { padding: 4px 12px 8px; }
+.newch input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 16px;
+}
+.newch input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.sub { color: var(--muted); font-size: 12.5px; }
+.newch .sub { display: block; margin-top: 4px; }
+
+.side-foot { border-top: 1px solid var(--line); }
+.me {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 6px;
+}
+.acts { display: flex; gap: 4px; padding: 0 10px 12px 12px; }
+.link-btn { border: 0; background: transparent; color: var(--muted); padding: 5px 8px; border-radius: 8px; font-size: 13px; }
+.link-btn:hover { background: var(--hover); color: var(--ink); }
+.link-btn.out:hover { color: var(--danger); }
+.rename { padding: 10px 12px 0; }
+.rename input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 16px;
+}
+.rename input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.rename .sub { display: block; margin-top: 4px; }
+.me .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.me .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.status i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); display: inline-block; }
+.status.wait i { background: var(--warn); }
+
+.av { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; background: var(--line); flex: none; display: block; }
+.me .av { width: 34px; height: 34px; }
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  flex: none;
+}
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn.sm { width: 30px; height: 30px; }
+.menu-btn { display: none; }
+
+/* ---------- main ---------- */
+.main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); }
+.wrap { width: 100%; max-width: 868px; margin: 0 auto; padding: 0 24px; }
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.head h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.head h1 .hash { color: var(--muted); margin-right: 2px; }
+.online { margin-left: auto; display: flex; align-items: center; gap: 10px; flex: none; }
+.online .stack { display: flex; }
+.online .stack .av { width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--panel); margin-left: -8px; }
+.online .stack .av:first-child { margin-left: 0; }
+.online .count { font-size: 13px; color: var(--muted); }
+
+.feed { position: relative; flex: 1; min-height: 0; display: flex; }
+.scroller { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 12px; }
+.scroller .wrap { padding-top: 0; }
+
+.msg {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  column-gap: 12px;
+  padding: 3px 8px;
+  margin: 0 -8px;
+  border-radius: 10px;
+  position: relative;
+}
+.msg:hover { background: var(--hover); }
+.msg.first { margin-top: 14px; }
+.msg .gutter { display: flex; justify-content: center; padding-top: 3px; }
+.msg .gt { opacity: 0; font-size: 11px; color: var(--muted); padding-top: 3px; white-space: nowrap; }
+.msg:hover .gt { opacity: 1; }
+.meta { display: flex; align-items: baseline; gap: 8px; }
+.meta .name { font-weight: 600; }
+.msg.mine .meta .name { color: var(--accent); }
+.meta time { color: var(--muted); font-size: 12px; }
+.text { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 68ch; }
+.text a { color: var(--accent); text-underline-offset: 2px; }
+.del {
+  opacity: 0;
+  align-self: start;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.msg:hover .del, .del:focus-visible, .del.armed { opacity: 1; }
+.del:hover { background: var(--hover); color: var(--danger); }
+.del.armed { color: var(--danger); font-weight: 600; }
+@media (hover: none) { .del { opacity: 0.7; } .msg .gt { display: none; } }
+
+.day { display: flex; align-items: center; gap: 12px; margin: 20px 0 6px; color: var(--muted); font-size: 12.5px; }
+.day::before, .day::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.trim { text-align: center; color: var(--muted); font-size: 12.5px; margin: 14px 0 0; }
+
+.notice { max-width: 46ch; margin: 12vh auto 0; text-align: center; padding: 0 12px; }
+.notice h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0 0 8px; }
+.notice p { margin: 0; color: var(--muted); }
+
+.jump {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.typing { height: 24px; font-size: 13px; color: var(--muted); }
+.typing .wrap { display: flex; align-items: center; gap: 8px; height: 100%; visibility: hidden; }
+.typing.on .wrap { visibility: visible; }
+.dots { display: inline-flex; gap: 3px; }
+.dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+
+.composer { padding-bottom: 14px; }
+.composer .wrap { position: relative; }
+.box {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+}
+.box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.box textarea {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  padding: 7px 8px;
+  max-height: 160px;
+  line-height: 1.45;
+  font-size: 16px;
+}
+.box textarea::placeholder { color: var(--muted); }
+.send { background: var(--accent); color: var(--accent-ink); }
+.send:hover { background: var(--accent); color: var(--accent-ink); filter: brightness(1.08); }
+.send:disabled { opacity: 0.35; cursor: default; filter: none; }
+.hint { margin: 6px 4px 0; }
+.emoji {
+  position: absolute;
+  right: 24px;
+  bottom: calc(100% + 6px);
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+.emoji button { width: 34px; height: 34px; border: 0; background: transparent; border-radius: 8px; font-size: 20px; line-height: 1; }
+.emoji button:hover { background: var(--hover); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: min(90vw, 420px);
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 14px;
+  z-index: 60;
+}
+.scrim { display: none; }
+
+/* ---------- log in ---------- */
+.login {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+}
+.brand-lg { font-family: var(--serif); font-size: 52px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 10px; }
+.lead { color: var(--muted); margin: 0 0 22px; }
+.acct { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); margin-bottom: 18px; min-width: 0; }
+.acct .nm { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct > div { min-width: 0; }
+.field label { display: block; font-weight: 500; margin-bottom: 6px; }
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 16px;
+}
+.field input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.err { color: var(--danger); font-size: 13px; min-height: 20px; margin: 6px 0 8px; }
+.primary { width: 100%; padding: 11px 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.primary:hover { filter: brightness(1.08); }
+.fine { margin: 16px 0 0; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(84vw, 310px);
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .side.open { transform: none; }
+  .scrim.on { display: block; position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, 0.45); z-index: 25; }
+  .menu-btn { display: inline-grid; margin-left: -6px; }
+  .head { padding: 10px 14px; }
+  .head h1 { font-size: 26px; }
+  .wrap { padding: 0 14px; }
+  .emoji { right: 14px; }
+  .hint { display: none; }
+  .online .count { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dots span { animation: none; opacity: 0.6; }
+  .side { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Channels">
+    <div class="brand">Relay</div>
+    <div class="side-head">
+      <span>Channels</span>
+      <button class="icon-btn sm" id="addCh" type="button" aria-label="New channel" title="New channel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="newch" id="newCh" hidden>
+      <input id="newChInput" maxlength="32" placeholder="channel-name" aria-label="New channel name" autocomplete="off">
+      <span class="sub">Press Enter to create, Esc to cancel</span>
+    </div>
+    <nav class="chans" id="chans"></nav>
+    <div class="side-foot">
+      <div class="rename" id="renameRow" hidden>
+        <input id="renameInput" maxlength="30" aria-label="Display name" autocomplete="off">
+        <span class="sub">Press Enter to save, Esc to cancel</span>
+      </div>
+      <div class="me" id="me"></div>
+      <div class="acts">
+        <button class="link-btn" id="renameBtn" type="button">Change name</button>
+        <button class="link-btn out" id="logoutBtn" type="button">Log out</button>
+      </div>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <header class="head">
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Show channels">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <h1 id="title">Relay</h1>
+      <div class="online" id="online" hidden></div>
+    </header>
+
+    <div class="feed">
+      <div class="scroller" id="scroller" role="log" aria-live="polite" aria-label="Messages">
+        <div class="wrap" id="list"></div>
+      </div>
+      <button class="jump" id="jump" type="button" hidden>New messages</button>
+    </div>
+
+    <div class="typing" id="typing" aria-live="polite">
+      <div class="wrap"><span class="dots" aria-hidden="true"><span></span><span></span><span></span></span><span id="typingTxt"></span></div>
+    </div>
+
+    <div class="composer">
+      <div class="wrap">
+        <div class="emoji" id="emoji" hidden></div>
+        <div class="box">
+          <textarea id="input" rows="1" maxlength="2000" aria-label="Message" placeholder="Message" disabled></textarea>
+          <button class="icon-btn" id="emojiBtn" type="button" aria-label="Insert emoji" title="Insert emoji">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>
+          </button>
+          <button class="icon-btn send" id="sendBtn" type="button" aria-label="Send message" title="Send" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="sub hint">Enter sends your message. Shift+Enter starts a new line.</div>
+      </div>
+    </div>
+  </main>
+</div>
+<section class="login" id="login" aria-label="Log in"><div class="login-card" id="loginCard"></div></section>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var MAX_WINDOW = 150;   // messages shown per channel
+  var PRUNE_AT = 200;     // trim a channel once it holds more than this
+  var PRUNE_TO = 150;     // ...down to this many
+  var MAX_CHANNELS = 16;
+  var MAX_LEN = 2000;
+  var EMOJI = ['😀','😂','🙂','😍','🤔','😅','😭','🙌','👍','👏','🙏','🔥','🎉','✅','❤️','💡','👀','🚀','😎','🤝','😴','🤯','💯','☕'];
+  var BLANK = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><rect width="36" height="36" fill="#9aa7b2"/><circle cx="18" cy="14" r="6" fill="#fff"/><path d="M6 33c1-8 7-11 12-11s11 3 12 11z" fill="#fff"/></svg>');
+
+  var $ = function (s) { return document.querySelector(s); };
+
+  var state = {
+    status: 'loading',           // loading | unavailable | signedout | ready
+    db: null, room: null, user: null,
+    me: { id: null, name: '', avatarUrl: BLANK, color: '#888' },
+    canWrite: true,
+    channels: [],
+    active: null,
+    msgs: [],
+    loaded: false,
+    latest: {},                  // channelId -> {ts, uid} | null
+    lastRead: {},                // channelId -> ts
+    peers: [],
+    connected: false,
+    forceScroll: true,
+    members: {},                 // uid -> chosen display name
+    prefill: ''
+  };
+
+  /* ---------- helpers ---------- */
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (k === 'class') el.className = v;
+        else if (k === 'text') el.textContent = v;
+        else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+        else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
+      });
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var kids = [].concat(arguments[i]);
+      for (var j = 0; j < kids.length; j++) if (kids[j] != null && kids[j] !== false) el.append(kids[j]);
+    }
+    return el;
+  }
+
+  function cu(name) {
+    try {
+      if (window.claude && typeof window.claude.use === 'function') {
+        return Promise.resolve(window.claude.use(name)).catch(function () { return null; });
+      }
+    } catch (e) {}
+    return Promise.resolve(null);
+  }
+
+  function prof(map, id) {
+    var p = (map && map[id]) || {};
+    return { name: p.name || 'Someone', avatarUrl: p.avatarUrl || BLANK };
+  }
+
+  function nameFor(uid, profs) {
+    if (state.members[uid]) return state.members[uid];
+    if (uid === state.me.id) return state.me.name || 'You';
+    return (profs && profs[uid] && profs[uid].name) || 'Someone';
+  }
+  function cleanName(s) {
+    return String(s || '').replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 4500);
+  }
+
+  function errMsg(e, verb) {
+    var c = e && e.code;
+    if (c === 'quota_exceeded') return 'This chat is full. Ask an editor to remove old channels, then try again.';
+    if (c === 'resource_exhausted') return 'Too many actions at once. Wait a moment and try again.';
+    if (c === 'revoked') return 'Your access to this chat changed. Reload the page.';
+    if (c === 'invalid_argument') return 'You can read this chat but not post in it.';
+    return 'Could not ' + (verb || 'send') + '. Check your connection and try again.';
+  }
+
+  var timeFmt = new Intl.DateTimeFormat([], { hour: 'numeric', minute: '2-digit' });
+  var dayFmt = new Intl.DateTimeFormat([], { weekday: 'long', month: 'long', day: 'numeric' });
+  function dayKey(ts) { var d = new Date(ts); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+  function dayLabel(ts) {
+    var now = new Date(), y = new Date();
+    y.setDate(now.getDate() - 1);
+    if (dayKey(ts) === dayKey(now.getTime())) return 'Today';
+    if (dayKey(ts) === dayKey(y.getTime())) return 'Yesterday';
+    return dayFmt.format(new Date(ts));
+  }
+
+  function linkify(text) {
+    var frag = document.createDocumentFragment();
+    var re = /https?:\/\/[^\s<>"']+/g, last = 0, m;
+    while ((m = re.exec(text))) {
+      var url = m[0], trail = '';
+      var t = url.match(/[.,;:!?)\]]+$/);
+      if (t) { trail = t[0]; url = url.slice(0, url.length - trail.length); }
+      if (m.index > last) frag.append(text.slice(last, m.index));
+      var ok = false;
+      try { var u = new URL(url); ok = (u.protocol === 'http:' || u.protocol === 'https:'); } catch (e) {}
+      if (ok) frag.append(h('a', { href: url, target: '_blank', rel: 'noopener noreferrer', text: url }));
+      else frag.append(url);
+      if (trail) frag.append(trail);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.append(text.slice(last));
+    return frag;
+  }
+
+  function activeChannel() {
+    for (var i = 0; i < state.channels.length; i++) if (state.channels[i].id === state.active) return state.channels[i];
+    return null;
+  }
+
+  /* ---------- read tracking ---------- */
+  try { state.lastRead = JSON.parse(store.get('relay:read') || '{}') || {}; } catch (e) { state.lastRead = {}; }
+  function saveRead() { store.set('relay:read', JSON.stringify(state.lastRead)); }
+  function isUnread(id) {
+    var l = state.latest[id];
+    if (!l || l.uid === state.me.id) return false;
+    return l.ts > (state.lastRead[id] || 0);
+  }
+  function markRead() {
+    var id = state.active;
+    if (!id || document.visibilityState !== 'visible') return;
+    var l = state.latest[id];
+    var newest = Math.max(l ? l.ts : 0, state.msgs.length ? state.msgs[state.msgs.length - 1].ts : 0);
+    if (newest > (state.lastRead[id] || 0)) {
+      state.lastRead[id] = newest;
+      saveRead();
+      renderSidebar();
+    }
+  }
+
+  /* ---------- rendering ---------- */
+  function renderAll() {
+    renderSidebar();
+    renderHeader();
+    renderMessages();
+    renderComposer();
+    renderPresence();
+    renderStatus();
+    renderLogin();
+  }
+
+  function renderSidebar() {
+    var nav = $('#chans');
+    nav.replaceChildren.apply(nav, state.channels.map(function (c) {
+      var isActive = c.id === state.active;
+      var unread = !isActive && isUnread(c.id);
+      return h('button', {
+        type: 'button',
+        class: 'chan' + (isActive ? ' active' : '') + (unread ? ' unread' : ''),
+        'aria-current': isActive ? 'true' : null,
+        onclick: function () { selectChannel(c.id); }
+      },
+        h('span', { class: 'hash', text: '#' }),
+        h('span', { class: 'cname', text: c.name }),
+        unread ? h('span', { class: 'dot', role: 'img', 'aria-label': 'Unread messages' }) : null
+      );
+    }));
+    var me = $('#me');
+    if (state.status === 'ready') {
+      me.replaceChildren(
+        h('img', { class: 'av', src: state.me.avatarUrl || BLANK, alt: '' }),
+        h('div', { class: 'who' },
+          h('span', { class: 'nm', text: nameFor(state.me.id) }),
+          h('span', { class: 'status', id: 'statusLine' }, h('i'), h('span', { id: 'statusTxt' }))
+        )
+      );
+      renderStatus();
+    } else {
+      me.replaceChildren();
+    }
+  }
+
+  function renderStatus() {
+    var line = $('#statusLine'), txt = $('#statusTxt');
+    if (!line || !txt) return;
+    if (!state.room) { txt.textContent = 'Connected'; line.classList.remove('wait'); return; }
+    if (state.connected) { txt.textContent = 'Live'; line.classList.remove('wait'); }
+    else { txt.textContent = 'Reconnecting'; line.classList.add('wait'); }
+  }
+
+  function renderHeader() {
+    var c = activeChannel();
+    var t = $('#title');
+    if (c) t.replaceChildren(h('span', { class: 'hash', text: '#' }), c.name);
+    else t.textContent = 'Relay';
+  }
+
+  function renderComposer() {
+    var input = $('#input'), send = $('#sendBtn');
+    var c = activeChannel();
+    var can = state.status === 'ready' && !!c && state.canWrite;
+    input.disabled = !can;
+    input.placeholder = !can
+      ? (state.status === 'ready' && c ? 'You have view-only access to this chat' : 'Message')
+      : 'Message #' + c.name;
+    send.disabled = !can || !input.value.trim();
+  }
+
+  var renderToken = 0, lastCount = 0, lastChannel = null;
+
+  async function renderMessages() {
+    var token = ++renderToken;
+    var list = $('#list');
+
+    if (state.status !== 'ready') { list.replaceChildren(); return; }
+    if (!state.active || !state.loaded) {
+      list.replaceChildren(h('div', { class: 'notice' }, h('p', { text: 'Loading messages' })));
+      return;
+    }
+    var ch = activeChannel();
+    if (!state.msgs.length) {
+      list.replaceChildren(h('div', { class: 'notice' },
+        h('h2', { text: 'This is the start of #' + (ch ? ch.name : '') }),
+        h('p', { text: 'Send the first message. Everyone in this channel sees it the moment it arrives.' })));
+      lastCount = 0; lastChannel = state.active;
+      return;
+    }
+
+    var ids = [state.me.id];
+    state.msgs.forEach(function (m) { if (ids.indexOf(m.uid) < 0) ids.push(m.uid); });
+    var profs = {};
+    try { profs = await state.user.profiles(ids); } catch (e) {}
+    if (token !== renderToken) return;
+
+    var frag = document.createDocumentFragment();
+    if (state.msgs.length >= MAX_WINDOW) frag.append(h('p', { class: 'trim', text: 'Older messages are trimmed to keep chat fast.' }));
+    var prev = null;
+    state.msgs.forEach(function (m) {
+      var newDay = !prev || dayKey(prev.ts) !== dayKey(m.ts);
+      if (newDay) frag.append(h('div', { class: 'day' }, h('span', { text: dayLabel(m.ts) })));
+      var grouped = prev && !newDay && prev.uid === m.uid && (m.ts - prev.ts) < 5 * 60 * 1000;
+      var mine = m.uid === state.me.id;
+      var p = mine ? { avatarUrl: state.me.avatarUrl || BLANK } : prof(profs, m.uid);
+      var time = timeFmt.format(new Date(m.ts));
+      frag.append(h('div', { class: 'msg' + (grouped ? '' : ' first') + (mine ? ' mine' : ''), 'data-id': m.id },
+        h('div', { class: 'gutter' },
+          grouped ? h('span', { class: 'gt', text: time }) : h('img', { class: 'av', src: p.avatarUrl, alt: '' })),
+        h('div', { class: 'body' },
+          grouped ? null : h('div', { class: 'meta' }, h('span', { class: 'name', text: nameFor(m.uid, profs) }), h('time', { datetime: new Date(m.ts).toISOString(), text: time })),
+          h('div', { class: 'text' }, linkify(m.text))),
+        mine && state.canWrite ? delBtn(m) : h('span')
+      ));
+      prev = m;
+    });
+
+    var sc = $('#scroller');
+    var nearBottom = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
+    var grew = lastChannel === state.active && state.msgs.length > lastCount;
+    list.replaceChildren(frag);
+    if (state.forceScroll || nearBottom) {
+      sc.scrollTop = sc.scrollHeight;
+      state.forceScroll = false;
+      $('#jump').hidden = true;
+    } else if (grew) {
+      $('#jump').hidden = false;
+    }
+    lastCount = state.msgs.length;
+    lastChannel = state.active;
+    markRead();
+  }
+
+  function delBtn(m) {
+    var armed = false, timer;
+    var b = h('button', { class: 'del', type: 'button', text: 'Delete', 'aria-label': 'Delete message' });
+    b.addEventListener('click', async function () {
+      if (!armed) {
+        armed = true;
+        b.textContent = 'Confirm';
+        b.classList.add('armed');
+        timer = setTimeout(function () { armed = false; b.textContent = 'Delete'; b.classList.remove('armed'); }, 3000);
+        return;
+      }
+      clearTimeout(timer);
+      try { await state.db.doc('channels/' + state.active + '/messages/' + m.id).delete(); }
+      catch (e) { toast(errMsg(e, 'delete the message')); }
+    });
+    return b;
+  }
+
+  /* ---------- presence and typing ---------- */
+  var presenceToken = 0;
+  async function renderPresence() {
+    var box = $('#online');
+    if (!state.room || state.status !== 'ready') { box.hidden = true; return; }
+    var token = ++presenceToken;
+    var byUid = {};
+    var ids = [];
+    state.peers.forEach(function (p) {
+      if (p.kind !== 'viewer') return;
+      var u = p.presence && p.presence.uid;
+      if (typeof u === 'string' && u && !byUid[u]) { byUid[u] = true; ids.push(u); }
+    });
+    if (!byUid[state.me.id]) ids.unshift(state.me.id);
+    var profs = {};
+    try { profs = await state.user.profiles(ids); } catch (e) {}
+    if (token !== presenceToken) return;
+    var names = ids.map(function (id) { return id === state.me.id ? 'You' : nameFor(id, profs); });
+    box.replaceChildren(
+      h('div', { class: 'stack', 'aria-hidden': 'true' }, ids.slice(0, 5).map(function (id) {
+        return h('img', { class: 'av', src: id === state.me.id ? (state.me.avatarUrl || BLANK) : prof(profs, id).avatarUrl, alt: '' });
+      })),
+      h('span', { class: 'count', text: ids.length > 1 ? ids.length + ' online' : 'Only you here' })
+    );
+    box.title = names.join(', ');
+    box.hidden = false;
+  }
+
+  var typingToken = 0;
+  async function renderTyping() {
+    var el = $('#typing');
+    if (!state.room || state.status !== 'ready') { el.classList.remove('on'); return; }
+    var now = Date.now(), ids = [];
+    state.peers.forEach(function (p) {
+      if (p.isMe || p.kind !== 'viewer') return;
+      var pr = p.presence || {};
+      if (pr.typing === state.active && typeof pr.uid === 'string' && now - p.updatedAt < 6000 && ids.indexOf(pr.uid) < 0) ids.push(pr.uid);
+    });
+    var token = ++typingToken;
+    if (!ids.length) { el.classList.remove('on'); return; }
+    var profs = {};
+    try { profs = await state.user.profiles(ids); } catch (e) {}
+    if (token !== typingToken) return;
+    var n = ids.map(function (id) { return nameFor(id, profs); });
+    var txt = n.length === 1 ? n[0] + ' is typing'
+      : n.length === 2 ? n[0] + ' and ' + n[1] + ' are typing'
+      : 'Several people are typing';
+    $('#typingTxt').textContent = txt;
+    el.classList.add('on');
+  }
+
+  var typingTimer = null, lastTick = 0;
+  function pushPresence() {
+    if (!state.room || !state.me.id) return;
+    state.room.presence({ uid: state.me.id, ch: state.active, typing: null }).catch(function () {});
+  }
+  function noteTyping() {
+    if (!state.room) return;
+    var now = Date.now();
+    if (now - lastTick > 2500) {
+      lastTick = now;
+      state.room.presence({ typing: state.active, tick: now }).catch(function () {});
+    }
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(stopTyping, 3500);
+  }
+  function stopTyping() {
+    clearTimeout(typingTimer);
+    if (!state.room || !lastTick) { lastTick = 0; return; }
+    lastTick = 0;
+    state.room.presence({ typing: null }).catch(function () {});
+  }
+
+  /* ---------- channels and messages ---------- */
+  var latestSubs = {}, activeUnsub = null, chansUnsub = null, membersUnsub = null, seeded = false;
+
+  function watchLatest(id) {
+    if (latestSubs[id]) return;
+    latestSubs[id] = state.db.collection('channels/' + id + '/messages').orderBy('ts', 'desc').limit(1).onSnapshot(function (snap) {
+      if (snap.empty && snap.metadata && snap.metadata.fromCache) return;
+      var d = snap.docs[0] && snap.docs[0].data();
+      var latest = d ? { ts: Number(d.ts) || 0, uid: d.uid } : null;
+      state.latest[id] = latest;
+      if (state.lastRead[id] === undefined) { state.lastRead[id] = latest ? latest.ts : 0; saveRead(); }
+      if (id === state.active) markRead();
+      renderSidebar();
+    }, function () { delete latestSubs[id]; });
+  }
+
+  function openChannel(id) {
+    if (activeUnsub) { activeUnsub(); activeUnsub = null; }
+    state.msgs = [];
+    state.loaded = false;
+    state.forceScroll = true;
+    activeUnsub = state.db.collection('channels/' + id + '/messages').orderBy('ts', 'desc').limit(MAX_WINDOW).onSnapshot(function (snap) {
+      if (state.active !== id) return;
+      if (snap.empty && snap.metadata && snap.metadata.fromCache) return;
+      state.msgs = snap.docs.map(function (d) {
+        var v = d.data() || {};
+        return { id: d.id, uid: String(v.uid || ''), text: String(v.text || '').slice(0, MAX_LEN), ts: Number(v.ts) || 0 };
+      }).sort(function (a, b) { return a.ts - b.ts || (a.id < b.id ? -1 : 1); });
+      state.loaded = true;
+      renderMessages();
+    }, function (e) {
+      state.loaded = true;
+      state.msgs = [];
+      toast(errMsg(e, 'load messages'));
+      renderMessages();
+    });
+  }
+
+  function selectChannel(id) {
+    closeDrawer();
+    if (id === state.active) return;
+    stopTyping();
+    state.active = id;
+    store.set('relay:active', id);
+    openChannel(id);
+    pushPresence();
+    renderAll();
+    if (window.matchMedia('(hover: hover)').matches) $('#input').focus();
+  }
+
+  function onChannels(snap) {
+    if (snap.empty) {
+      if (!(snap.metadata && snap.metadata.fromCache) && !seeded) {
+        seeded = true;
+        state.db.doc('channels/general').set({ name: 'general', createdAt: 0, by: state.me.id }).catch(function () {});
+      }
+      return;
+    }
+    state.channels = snap.docs.map(function (d) {
+      var v = d.data() || {};
+      return { id: d.id, name: String(v.name || d.id).slice(0, 32), createdAt: Number(v.createdAt) || 0 };
+    });
+    state.channels.forEach(function (c) { watchLatest(c.id); });
+    if (!state.active) {
+      var saved = store.get('relay:active');
+      var pick = state.channels.filter(function (c) { return c.id === saved; })[0] || state.channels[0];
+      state.active = pick.id;
+      openChannel(pick.id);
+      pushPresence();
+    }
+    renderAll();
+  }
+
+  async function createChannel(raw) {
+    var name = raw.trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 32);
+    if (!name) return;
+    var dup = state.channels.filter(function (c) { return c.name === name; })[0];
+    if (dup) { selectChannel(dup.id); return; }
+    if (state.channels.length >= MAX_CHANNELS) { toast('This chat is limited to ' + MAX_CHANNELS + ' channels.'); return; }
+    var slug = name.replace(/[^a-z0-9]/g, '').slice(0, 20) || 'ch';
+    var id = slug + '-' + Math.random().toString(36).slice(2, 7);
+    try {
+      await state.db.doc('channels/' + id).set({ name: name, createdAt: Date.now(), by: state.me.id });
+      selectChannel(id);
+    } catch (e) { toast(errMsg(e, 'create the channel')); }
+  }
+
+  async function send() {
+    var input = $('#input');
+    var text = input.value.trim().slice(0, MAX_LEN);
+    var ch = state.active;
+    if (!text || !ch || !state.canWrite || state.status !== 'ready') return;
+    var last = state.msgs.length ? state.msgs[state.msgs.length - 1].ts : 0;
+    var ts = Math.max(Date.now(), last + 1);
+    var prevValue = input.value;
+    input.value = '';
+    autosize();
+    stopTyping();
+    state.forceScroll = true;
+    try {
+      await state.db.collection('channels/' + ch + '/messages').add({ uid: state.me.id, text: text, ts: ts });
+      state.lastRead[ch] = Math.max(state.lastRead[ch] || 0, ts);
+      saveRead();
+      maybePrune(ch);
+    } catch (e) {
+      input.value = prevValue + (input.value ? '\n' + input.value : '');
+      autosize();
+      toast(errMsg(e, 'send the message'));
+    }
+  }
+
+  var pruning = false;
+  async function maybePrune(ch) {
+    if (pruning || Math.random() > 0.2) return;
+    pruning = true;
+    try {
+      var snap = await state.db.collection('channels/' + ch + '/messages').orderBy('ts', 'desc').limit(500).get();
+      if (snap.size > PRUNE_AT) {
+        var old = snap.docs.slice(PRUNE_TO);
+        for (var i = 0; i < old.length; i++) {
+          await state.db.doc('channels/' + ch + '/messages/' + old[i].id).delete();
+        }
+      }
+    } catch (e) { /* trimming is best effort */ }
+    pruning = false;
+  }
+
+  /* ---------- UI wiring ---------- */
+  function autosize() {
+    var i = $('#input');
+    i.style.height = 'auto';
+    i.style.height = Math.min(i.scrollHeight, 160) + 'px';
+    $('#sendBtn').disabled = i.disabled || !i.value.trim();
+  }
+
+  function openDrawer() { $('#side').classList.add('open'); $('#scrim').classList.add('on'); }
+  function closeDrawer() { $('#side').classList.remove('open'); $('#scrim').classList.remove('on'); }
+
+  function buildEmoji() {
+    var box = $('#emoji');
+    box.replaceChildren.apply(box, EMOJI.map(function (e) {
+      return h('button', { type: 'button', text: e, 'aria-label': 'Insert ' + e, onclick: function () {
+        var i = $('#input');
+        if (i.disabled) return;
+        var s = i.selectionStart == null ? i.value.length : i.selectionStart;
+        var en = i.selectionEnd == null ? s : i.selectionEnd;
+        i.setRangeText(e, s, en, 'end');
+        autosize();
+        i.focus();
+      } });
+    }));
+  }
+
+  function wire() {
+    var input = $('#input');
+    input.addEventListener('input', function () {
+      autosize();
+      if (input.value.trim()) noteTyping(); else stopTyping();
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+    });
+    $('#sendBtn').addEventListener('click', send);
+
+    $('#emojiBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var box = $('#emoji');
+      box.hidden = !box.hidden;
+    });
+    document.addEventListener('click', function (e) {
+      var box = $('#emoji');
+      if (!box.hidden && !box.contains(e.target)) box.hidden = true;
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { $('#emoji').hidden = true; closeDrawer(); }
+    });
+
+    $('#logoutBtn').addEventListener('click', signOut);
+    var rr = $('#renameRow'), ri = $('#renameInput');
+    $('#renameBtn').addEventListener('click', function () {
+      rr.hidden = !rr.hidden;
+      if (!rr.hidden) { ri.value = nameFor(state.me.id); ri.focus(); ri.select(); }
+    });
+    ri.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); rr.hidden = true; renameTo(ri.value); }
+      else if (e.key === 'Escape') { rr.hidden = true; }
+    });
+
+    $('#menuBtn').addEventListener('click', openDrawer);
+    $('#scrim').addEventListener('click', closeDrawer);
+
+    var addBtn = $('#addCh'), wrapNew = $('#newCh'), newIn = $('#newChInput');
+    addBtn.addEventListener('click', function () {
+      wrapNew.hidden = !wrapNew.hidden;
+      if (!wrapNew.hidden) newIn.focus();
+    });
+    newIn.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        var v = newIn.value;
+        newIn.value = '';
+        wrapNew.hidden = true;
+        createChannel(v);
+      } else if (e.key === 'Escape') {
+        newIn.value = '';
+        wrapNew.hidden = true;
+      }
+    });
+
+    var sc = $('#scroller');
+    sc.addEventListener('scroll', function () {
+      if (sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140) $('#jump').hidden = true;
+    });
+    $('#jump').addEventListener('click', function () {
+      sc.scrollTop = sc.scrollHeight;
+      $('#jump').hidden = true;
+    });
+    document.addEventListener('visibilitychange', markRead);
+    setInterval(renderTyping, 1500);
+    buildEmoji();
+  }
+
+  /* ---------- log in and log out ---------- */
+  var loginKey = '';
+
+  function renderLogin() {
+    var el = $('#login');
+    if (state.status === 'ready') { el.hidden = true; loginKey = ''; return; }
+    el.hidden = false;
+    var key = state.status + '|' + state.me.id + '|' + state.prefill;
+    if (key === loginKey) return;
+    loginKey = key;
+    var card = $('#loginCard');
+    var kids = [h('div', { class: 'brand-lg', text: 'Relay' })];
+    if (state.status === 'loading') {
+      kids.push(h('p', { class: 'lead', text: 'Connecting to your workspace' }));
+    } else if (state.status === 'unavailable') {
+      kids.push(h('p', { class: 'lead', text: 'Relay works for signed-in members of your organization. Open this page from Claude with your work account, then log in here.' }));
+    } else {
+      var input = h('input', { id: 'loginName', maxlength: '30', autocomplete: 'nickname', 'aria-describedby': 'loginErr' });
+      input.value = state.prefill;
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); submitLogin(); }
+      });
+      kids.push(
+        h('p', { class: 'lead', text: 'Team chat that updates the moment someone types.' }),
+        h('div', { class: 'acct' },
+          h('img', { class: 'av', src: state.me.avatarUrl || BLANK, alt: '' }),
+          h('div', null,
+            h('span', { class: 'nm', text: state.me.name || 'Your account' }),
+            h('span', { class: 'sub', text: 'Signed in to Claude' }))),
+        h('div', { class: 'field' },
+          h('label', { for: 'loginName', text: 'Display name' }),
+          input,
+          h('div', { class: 'err', id: 'loginErr', role: 'alert' })),
+        h('button', { class: 'primary', type: 'button', text: 'Log in', onclick: submitLogin }),
+        h('p', { class: 'fine', text: 'Claude has already verified who you are, so there is no password. Your display name is what others see in chat.' })
+      );
+      if (window.matchMedia('(hover: hover)').matches) setTimeout(function () { input.focus(); input.select(); }, 0);
+    }
+    card.replaceChildren.apply(card, kids);
+  }
+
+  function submitLogin() {
+    var inp = $('#loginName');
+    var name = cleanName(inp.value);
+    if (!name) {
+      $('#loginErr').textContent = 'Enter a display name to continue.';
+      inp.focus();
+      return;
+    }
+    signIn(name);
+  }
+
+  async function prepareLogin() {
+    state.prefill = cleanName(state.me.name);
+    try {
+      var snap = await state.db.doc('members/' + state.me.id).get();
+      var v = snap.exists && snap.data();
+      if (v && typeof v.name === 'string' && cleanName(v.name)) state.prefill = cleanName(v.name);
+    } catch (e) {}
+    if (state.status === 'signedout') renderLogin();
+  }
+
+  async function signIn(nick) {
+    state.status = 'ready';
+    store.set('relay:session', state.me.id);
+    if (nick && state.canWrite) {
+      state.members[state.me.id] = nick;
+      try { await state.db.doc('members/' + state.me.id).set({ name: nick, at: Date.now() }); }
+      catch (e) { toast(errMsg(e, 'save your display name')); }
+    }
+    renderAll();
+    membersUnsub = state.db.collection('members').limit(500).onSnapshot(function (snap) {
+      var m = {};
+      snap.docs.forEach(function (d) {
+        var v = d.data() || {};
+        var n = typeof v.name === 'string' ? cleanName(v.name) : '';
+        if (n) m[d.id] = n;
+      });
+      state.members = m;
+      if (state.status === 'ready') { renderSidebar(); renderMessages(); renderPresence(); }
+    }, function () {});
+    chansUnsub = state.db.collection('channels').orderBy('createdAt', 'asc').onSnapshot(onChannels, function () {
+      state.status = 'unavailable';
+      renderAll();
+    });
+    pushPresence();
+  }
+
+  function signOut() {
+    stopTyping();
+    if (state.room) state.room.presence({ uid: null, ch: null, typing: null, tick: null }).catch(function () {});
+    [chansUnsub, membersUnsub, activeUnsub].forEach(function (fn) { if (fn) fn(); });
+    Object.keys(latestSubs).forEach(function (id) { try { latestSubs[id](); } catch (e) {} });
+    latestSubs = {};
+    chansUnsub = membersUnsub = activeUnsub = null;
+    state.channels = []; state.active = null; state.msgs = []; state.loaded = false;
+    state.latest = {}; state.members = {}; seeded = false;
+    renderToken++; typingToken++; presenceToken++;
+    lastCount = 0; lastChannel = null;
+    store.del('relay:session');
+    var input = $('#input');
+    input.value = '';
+    autosize();
+    $('#emoji').hidden = true;
+    $('#renameRow').hidden = true;
+    $('#typing').classList.remove('on');
+    $('#online').hidden = true;
+    closeDrawer();
+    state.status = 'signedout';
+    loginKey = '';
+    renderAll();
+    prepareLogin();
+  }
+
+  async function renameTo(raw) {
+    var name = cleanName(raw);
+    if (!name || !state.canWrite) return;
+    state.members[state.me.id] = name;
+    renderSidebar(); renderMessages(); renderPresence();
+    try { await state.db.doc('members/' + state.me.id).set({ name: name, at: Date.now() }); }
+    catch (e) { toast(errMsg(e, 'save your name')); }
+  }
+
+  /* ---------- start ---------- */
+  async function init() {
+    wire();
+    renderAll();
+
+    state.user = await cu('user');
+    if (state.user) {
+      try { state.me = await state.user.me(); } catch (e) {}
+      try { state.canWrite = (await state.user.can('data.write')) !== false; } catch (e) {}
+    }
+    state.db = await cu('db');
+    if (!state.db || !state.user || !state.me.id) {
+      state.status = 'unavailable';
+      renderAll();
+      return;
+    }
+
+    if (store.get('relay:session') === state.me.id) {
+      signIn(null);
+    } else {
+      state.status = 'signedout';
+      renderAll();
+      prepareLogin();
+    }
+
+    state.room = await cu('room');
+    if (state.room) {
+      var room = state.room;
+      state.connected = room.connected();
+      if (state.status === 'ready') pushPresence();
+      room.onPeers(function (change) {
+        state.peers = change.peers;
+        renderPresence();
+        renderTyping();
+      }, function () { state.peers = []; renderPresence(); });
+      var discTimer;
+      room.onConnection(function (c) {
+        clearTimeout(discTimer);
+        if (c) { state.connected = true; renderStatus(); }
+        else discTimer = setTimeout(function () { state.connected = false; renderStatus(); }, 2000);
+      }, function () { state.connected = false; renderStatus(); });
+      renderStatus();
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
